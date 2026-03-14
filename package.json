@@ -1,6 +1,6 @@
 {
   "name": "clippy-guard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Terminal guardian for AI coding agents. Blocks dangerous commands, logs everything.",
   "bin": {
     "clippy-guard": "./src/cli.mjs"

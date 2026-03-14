@@ -14,6 +14,7 @@ const RULES_FILE = join(CLIPPY_HOME, 'rules.yaml');
 const LOG_FILE = join(CLIPPY_HOME, 'activity.jsonl');
 const HOOK_SCRIPT = join(CLIPPY_HOME, 'check-command.sh');
 const PORT = parseInt(process.env.CLIPPY_PORT || '3456');
+const PKG = JSON.parse(readFileSync(join(PKG_ROOT, 'package.json'), 'utf-8'));
 
 // ─── Colors ────────────────────────────────────────────
 const c = {
@@ -274,6 +275,9 @@ function cmdDashboard() {
       res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       const hooks = { claude: isHookInstalled() ? 'active' : 'not found' };
       res.end(JSON.stringify(hooks));
+    } else if (url.pathname === '/api/version') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ version: PKG.version }));
     } else {
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(readFileSync(dashboardFile, 'utf-8'));
