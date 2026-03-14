@@ -20,7 +20,7 @@ let package = Package(
         ),
         .target(
             name: "ClippyShared",
-            dependencies: [],
+            dependencies: ["Yams"],
             path: "ClippyShared"
         ),
         .testTarget(

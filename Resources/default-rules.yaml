@@ -1,0 +1,48 @@
+rules:
+  - name: destructive-rm
+    pattern: "rm\\s+(-[a-zA-Z]*f[a-zA-Z]*\\s+|.*--no-preserve-root)"
+    severity: critical
+    description: "Recursive force delete or no-preserve-root"
+
+  - name: disk-format
+    pattern: "(mkfs|dd\\s+if=|diskutil\\s+eraseDisk)"
+    severity: critical
+    description: "Disk formatting commands"
+
+  - name: permission-escalation
+    pattern: "(chmod\\s+-R\\s+777|chmod\\s+777)"
+    severity: critical
+    description: "Overly permissive file permissions"
+
+  - name: dangerous-curl
+    pattern: "curl\\s+.*\\|\\s*(bash|sh|zsh)"
+    severity: critical
+    description: "Piping curl output to shell"
+
+  - name: git-force-push
+    pattern: "git\\s+push\\s+.*(-f|--force)"
+    severity: warning
+    description: "Force pushing to remote"
+
+  - name: env-file-access
+    pattern: "cat\\s+.*\\.env"
+    severity: warning
+    description: "Reading environment files with secrets"
+
+  - name: npm-global-install
+    pattern: "npm\\s+install\\s+-g"
+    severity: info
+    description: "Global npm package installation"
+
+ai_tools:
+  - name: claude
+    process_name: "claude"
+    stop_signal: SIGTSTP
+
+  - name: kiro
+    process_name: "kiro"
+    stop_signal: SIGTSTP
+
+  - name: cursor
+    process_name: "cursor"
+    stop_signal: SIGTSTP
