@@ -15,6 +15,9 @@
 
 ---
 
+## Blog 
+https://www.sayantan.sh/blog/clippy
+
 ## Why
 
 AI coding agents run arbitrary shell commands. Most of the time that's fine. Sometimes it's `rm -rf /`, `chmod 777`, or `curl | bash`.

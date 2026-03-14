@@ -6,7 +6,16 @@
     "clippy-guard": "./src/cli.mjs"
   },
   "type": "module",
-  "keywords": ["cli", "security", "ai", "claude", "claude-code", "terminal", "guardian", "hooks"],
+  "keywords": [
+    "cli",
+    "security",
+    "ai",
+    "claude",
+    "claude-code",
+    "terminal",
+    "guardian",
+    "hooks"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=18"
@@ -16,5 +25,8 @@
     "hooks/",
     "dashboard/",
     "rules/"
-  ]
+  ],
+  "dependencies": {
+    "clippy-guard": "^1.0.1"
+  }
 }
