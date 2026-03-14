@@ -16,7 +16,11 @@ let package = Package(
         .executableTarget(
             name: "ClippyHelper",
             dependencies: ["Yams", "ClippyShared"],
-            path: "ClippyHelper"
+            path: "ClippyHelper",
+            linkerSettings: [
+                .linkedLibrary("EndpointSecurity"),
+                .linkedLibrary("bsm"),
+            ]
         ),
         .target(
             name: "ClippyShared",
