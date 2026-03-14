@@ -26,6 +26,15 @@ if [ -n "$CWD" ] && [ -f "$CWD/.clippy/rules.yaml" ]; then
     RULES_FILE="$CWD/.clippy/rules.yaml"
 fi
 
+# Deduplicate: skip if same command is already being processed (global + project hooks)
+CMD_HASH=$(echo "${SESSION}:${COMMAND}" | shasum | cut -d' ' -f1)
+LOCK_DIR="$CLIPPY_HOME/.lock_${CMD_HASH}"
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    exit 0
+fi
+# Clean up lock after a short delay (in background)
+(sleep 1 && rmdir "$LOCK_DIR" 2>/dev/null) &
+
 log_event() {
     local severity="$1"
     local rule="$2"

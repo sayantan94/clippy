@@ -331,9 +331,7 @@
   .row-cmd {
     font-size: 0.78rem;
     color: var(--text-secondary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    word-break: break-all;
   }
 
   .row-cmd span {
@@ -820,7 +818,7 @@
         return `<div class="row">
           <div class="row-time">${t}</div>
           <div class="row-action ${a}">${a}</div>
-          <div class="row-cmd"><span>${trunc(cmd, 70)}</span></div>
+          <div class="row-cmd"><span>${cmd}</span></div>
           <div class="row-rule">${rule}</div>
         </div>`;
       }).join('');

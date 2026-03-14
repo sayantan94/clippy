@@ -198,6 +198,8 @@ Opens a web dashboard at `http://localhost:3456` with:
 - Dark / light mode
 - Auto-refresh every 3 seconds
 
+![clippy-guard dashboard](dashboard.png)
+
 Custom port: `CLIPPY_PORT=8080 npx clippy-guard dashboard`
 
 ## How hooks work
