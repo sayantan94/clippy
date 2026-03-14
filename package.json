@@ -1,0 +1,20 @@
+{
+  "name": "clippy-guard",
+  "version": "1.0.0",
+  "description": "Terminal guardian for AI coding agents. Blocks dangerous commands, logs everything.",
+  "bin": {
+    "clippy-guard": "./src/cli.mjs"
+  },
+  "type": "module",
+  "keywords": ["cli", "security", "ai", "claude", "claude-code", "terminal", "guardian", "hooks"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "src/",
+    "hooks/",
+    "dashboard/",
+    "rules/"
+  ]
+}

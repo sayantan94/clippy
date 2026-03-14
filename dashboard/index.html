@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>clippy-guard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Lora:ital@1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sans: 'DM Sans', -apple-system, sans-serif;
+    --mono: 'IBM Plex Mono', 'SF Mono', monospace;
+  }
+
+  /* Dark (default) */
+  :root, [data-theme="dark"] {
+    --bg: #000;
+    --bg-card: #0a0a0a;
+    --bg-hover: #111;
+    --border: #1a1a1a;
+    --border-light: #222;
+    --text: #fff;
+    --text-secondary: #888;
+    --text-dim: #555;
+    --red: #ff4444;
+    --red-soft: #ff444418;
+    --amber: #ee9933;
+    --amber-soft: #ee993318;
+    --green: #44cc66;
+    --green-soft: #44cc6618;
+  }
+
+  /* Light */
+  [data-theme="light"] {
+    --bg: #fff;
+    --bg-card: #f8f8f8;
+    --bg-hover: #f0f0f0;
+    --border: #e5e5e5;
+    --border-light: #ddd;
+    --text: #000;
+    --text-secondary: #666;
+    --text-dim: #999;
+    --red: #cc2222;
+    --red-soft: #cc222212;
+    --amber: #bb7711;
+    --amber-soft: #bb771112;
+    --green: #22883a;
+    --green-soft: #22883a12;
+  }
+
+  /* System preference */
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #fff;
+      --bg-card: #f8f8f8;
+      --bg-hover: #f0f0f0;
+      --border: #e5e5e5;
+      --border-light: #ddd;
+      --text: #000;
+      --text-secondary: #666;
+      --text-dim: #999;
+      --red: #cc2222;
+      --red-soft: #cc222212;
+      --amber: #bb7711;
+      --amber-soft: #bb771112;
+      --green: #22883a;
+      --green-soft: #22883a12;
+    }
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { font-size: 13px; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+
+  /* Shell */
+  .shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .logo-mark {
+    font-size: 1.1rem;
+  }
+
+  .logo-text {
+    font-weight: 500;
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  .logo-version {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2.5s ease infinite;
+  }
+
+  .live-dot.off { background: var(--text-dim); animation: none; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Stats */
+  .stats {
+    display: flex;
+    gap: 0;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat {
+    flex: 1;
+  }
+
+  .stat-label {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    font-family: var(--mono);
+    text-transform: lowercase;
+  }
+
+  .stat-value {
+    font-size: 1.8rem;
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-value.red { color: var(--red); }
+  .stat-value.amber { color: var(--amber); }
+
+  /* Main grid */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 0;
+    min-height: calc(100vh - 180px);
+  }
+
+  /* Feed */
+  .feed {
+    border-right: 1px solid var(--border);
+    padding-right: 24px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0 12px;
+  }
+
+  .section-title {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    text-transform: lowercase;
+  }
+
+  .section-badge {
+    font-size: 0.72rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+  }
+
+  /* Filter chips */
+  .filters {
+    display: flex;
+    gap: 6px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    padding: 3px 10px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .chip:hover { color: var(--text-secondary); border-color: var(--border-light); }
+  .chip.active { color: var(--text); border-color: var(--text-dim); }
+
+  /* Directory group */
+  .dir-group {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dir-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .dir-header:hover { opacity: 0.7; }
+
+  .dir-chevron {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+    width: 10px;
+    font-family: var(--mono);
+  }
+
+  .dir-group.collapsed .dir-chevron { transform: rotate(-90deg); }
+  .dir-group.collapsed .dir-entries { display: none; }
+
+  .dir-path {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dir-path .name {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .dir-counts {
+    display: flex;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  .dir-count { color: var(--text-dim); }
+  .dir-count.blocked { color: var(--red); }
+  .dir-count.warned { color: var(--amber); }
+
+  /* Feed row */
+  .row {
+    display: grid;
+    grid-template-columns: 110px 60px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0 7px 18px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    transition: background 0.1s;
+  }
+
+  .row:first-child { border-top: none; }
+  .row:hover { background: var(--bg-hover); margin: 0 -8px; padding-left: 26px; padding-right: 8px; border-radius: 4px; }
+
+  .row-time {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .row-action {
+    font-size: 0.68rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .row-action.blocked { color: var(--red); }
+  .row-action.warned { color: var(--amber); }
+  .row-action.allowed { color: var(--text-dim); }
+  .row-action.info { color: var(--text-secondary); }
+
+  .row-cmd {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .row-cmd span {
+    color: var(--text);
+  }
+
+  .row-rule {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .feed-empty {
+    padding: 48px 0;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+
+  .feed-empty code {
+    font-family: var(--mono);
+    color: var(--text-secondary);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    padding-left: 24px;
+  }
+
+  .sidebar-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-tab {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    text-transform: lowercase;
+    padding: 16px 14px 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    margin-bottom: -1px;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    transition: color 0.15s;
+  }
+
+  .sidebar-tab:hover { color: var(--text-secondary); }
+  .sidebar-tab.active { color: var(--text); border-bottom-color: var(--text); }
+
+  /* Rules */
+  .rule {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rule-indicator {
+    width: 3px;
+    height: 28px;
+    border-radius: 1px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .rule-indicator.critical { background: var(--red); }
+  .rule-indicator.warning { background: var(--amber); }
+  .rule-indicator.info { background: var(--text-dim); }
+
+  .rule-body { flex: 1; min-width: 0; }
+
+  .rule-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .rule-desc {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+
+  .rule-pattern {
+    margin-top: 4px;
+  }
+
+  .rule-pattern code {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    background: var(--bg-hover);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    word-break: break-all;
+  }
+
+  .rule-sev {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* Hooks */
+  .hook {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hook-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hook-name {
+    font-size: 0.85rem;
+    font-weight: 400;
+  }
+
+  .hook-status {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .hook-status .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+
+  .hook-status.active { color: var(--green); }
+  .hook-status.active .dot { background: var(--green); }
+  .hook-status.inactive { color: var(--text-dim); }
+  .hook-status.inactive .dot { background: var(--text-dim); }
+
+  /* Settings */
+  .setting {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.78rem;
+  }
+
+  .setting-label { color: var(--text-dim); }
+
+  .setting-value {
+    font-family: var(--mono);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+  }
+
+  /* Toggle */
+  .toggle {
+    position: relative;
+    width: 32px;
+    height: 18px;
+    cursor: pointer;
+  }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--border-light);
+    border-radius: 9px;
+    transition: background 0.2s;
+  }
+
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    transition: all 0.2s;
+  }
+
+  .toggle input:checked + .toggle-track { background: var(--border-light); }
+  .toggle input:checked + .toggle-track::after { transform: translateX(14px); background: var(--text); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  @media (max-width: 800px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .feed { border-right: none; padding-right: 0; border-bottom: 1px solid var(--border); }
+    .sidebar { padding-left: 0; padding-top: 8px; }
+  }
+
+  /* Load animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .stats, .feed, .sidebar {
+    animation: fadeUp 0.4s ease;
+  }
+
+  .sidebar { animation-delay: 0.1s; animation-fill-mode: both; }
+
+  /* Theme toggle */
+  .theme-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .theme-btn:hover { color: var(--text-secondary); border-color: var(--border-light); }
+
+  .theme-icon { font-size: 0.85rem; line-height: 1; }
+</style>
+<script>
+  // Apply saved theme before render to avoid flash
+  (function() {
+    const saved = localStorage.getItem('clippy-theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+  })();
+</script>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div class="logo">
+      <span class="logo-mark">📎</span>
+      <span class="logo-text">clippy-guard</span>
+      <span class="logo-version">v0.1</span>
+    </div>
+    <div class="header-right">
+      <div class="live-indicator">
+        <div class="live-dot" id="live-dot"></div>
+        <span id="live-label">watching</span>
+      </div>
+      <button class="theme-btn" id="theme-toggle" title="Toggle theme">
+        <span class="theme-icon" id="theme-icon">&#9790;</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">scanned</div>
+      <div class="stat-value" id="stat-total">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">blocked</div>
+      <div class="stat-value red" id="stat-blocked">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">warnings</div>
+      <div class="stat-value amber" id="stat-warned">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">allowed</div>
+      <div class="stat-value" id="stat-allowed">—</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">projects</div>
+      <div class="stat-value" id="stat-projects">—</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="feed">
+      <div class="section-header">
+        <div class="section-title">activity</div>
+        <div class="section-badge" id="feed-badge">—</div>
+      </div>
+      <div class="filters" id="filter-bar">
+        <div class="chip active" data-project="all">all</div>
+      </div>
+      <div id="feed-list">
+        <div class="feed-empty">no activity yet. run <code>clippy-guard init</code> to start.</div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="section-header">
+        <div class="section-title">rules</div>
+        <div class="section-badge" id="rules-badge">—</div>
+      </div>
+      <div id="rules-list">
+        <div class="feed-empty" style="padding:24px 0">loading...</div>
+      </div>
+
+      <div class="sidebar-tabs" style="margin-top: 16px;">
+        <button class="sidebar-tab active" data-tab="hooks">hooks</button>
+        <button class="sidebar-tab" data-tab="settings">settings</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-hooks">
+        <div class="hook">
+          <div class="hook-left"><span class="hook-name">Claude Code</span></div>
+          <div class="hook-status inactive" id="hook-claude"><div class="dot"></div><span>unknown</span></div>
+        </div>
+        <div class="hook">
+          <div class="hook-left"><span class="hook-name">Gemini CLI</span></div>
+          <div class="hook-status inactive" id="hook-gemini"><div class="dot"></div><span>unknown</span></div>
+        </div>
+        <div class="hook">
+          <div class="hook-left"><span class="hook-name">Kiro</span></div>
+          <div class="hook-status inactive" id="hook-kiro"><div class="dot"></div><span>unknown</span></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-settings">
+        <div class="setting">
+          <span class="setting-label">log file</span>
+          <span class="setting-value">~/.clippy/activity.jsonl</span>
+        </div>
+        <div class="setting">
+          <span class="setting-label">rules</span>
+          <span class="setting-value">~/.clippy/rules.yaml</span>
+        </div>
+        <div class="setting">
+          <span class="setting-label">hook script</span>
+          <span class="setting-value">~/.clippy/check-command.sh</span>
+        </div>
+        <div class="setting">
+          <span class="setting-label">auto-refresh</span>
+          <label class="toggle">
+            <input type="checkbox" id="toggle-refresh" checked>
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const API = window.location.origin;
+  let refreshOn = true, timer = null, lastCount = 0;
+  let currentFilter = 'all', allEntries = [];
+
+  // Tabs
+  document.querySelectorAll('.sidebar-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Toggle
+  document.getElementById('toggle-refresh').addEventListener('change', (e) => {
+    refreshOn = e.target.checked;
+    document.getElementById('live-dot').classList.toggle('off', !refreshOn);
+    document.getElementById('live-label').textContent = refreshOn ? 'watching' : 'paused';
+    refreshOn ? start() : stop();
+  });
+
+  function start() { stop(); timer = setInterval(fetchAll, 3000); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+  async function fetchAll() {
+    try {
+      const [logRes, rulesRes, hooksRes] = await Promise.all([
+        fetch(API + '/api/log'), fetch(API + '/api/rules'), fetch(API + '/api/hooks')
+      ]);
+      allEntries = await logRes.json();
+      const rules = await rulesRes.json();
+      const hooks = await hooksRes.json();
+      renderStats(allEntries);
+      renderFilters(allEntries);
+      const filtered = currentFilter === 'all' ? allEntries
+        : allEntries.filter(e => (e.project || dirname(e.cwd) || 'unknown') === currentFilter);
+      renderFeed(filtered);
+      renderRules(rules);
+      renderHooks(hooks);
+    } catch (e) { console.warn('fetch error:', e); }
+  }
+
+  function dirname(p) { return p ? p.split('/').filter(Boolean).pop() : ''; }
+
+  function renderStats(entries) {
+    const b = entries.filter(e => e.action === 'blocked').length;
+    const w = entries.filter(e => e.action === 'warned').length;
+    const a = entries.filter(e => e.action === 'allowed').length;
+    const p = new Set(entries.map(e => e.cwd || e.project || 'unknown')).size;
+    document.getElementById('stat-total').textContent = entries.length;
+    document.getElementById('stat-blocked').textContent = b;
+    document.getElementById('stat-warned').textContent = w;
+    document.getElementById('stat-allowed').textContent = a;
+    document.getElementById('stat-projects').textContent = p;
+  }
+
+  function renderFilters(entries) {
+    const projects = [...new Set(entries.map(e => e.project || dirname(e.cwd) || 'unknown'))];
+    const bar = document.getElementById('filter-bar');
+    bar.innerHTML = ['all', ...projects].map(p => {
+      const active = p === currentFilter ? ' active' : '';
+      return `<div class="chip${active}" data-project="${esc(p)}">${esc(p)}</div>`;
+    }).join('');
+    bar.querySelectorAll('.chip').forEach(c => {
+      c.addEventListener('click', () => {
+        currentFilter = c.dataset.project;
+        lastCount = 0;
+        const f = currentFilter === 'all' ? allEntries
+          : allEntries.filter(e => (e.project || dirname(e.cwd) || 'unknown') === currentFilter);
+        renderFeed(f);
+        bar.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+        c.classList.add('active');
+      });
+    });
+  }
+
+  function renderFeed(entries) {
+    const el = document.getElementById('feed-list');
+    if (!entries.length) {
+      el.innerHTML = '<div class="feed-empty">no activity yet. run <code>clippy-guard init</code> to start.</div>';
+      return;
+    }
+    if (entries.length === lastCount) return;
+    lastCount = entries.length;
+    document.getElementById('feed-badge').textContent = entries.length + ' events';
+
+    // Group by cwd
+    const groups = new Map();
+    for (const e of entries) {
+      const k = e.cwd || e.project || 'unknown';
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(e);
+    }
+
+    // Sort: most recent first
+    const sorted = [...groups.entries()].sort((a, b) => {
+      const at = a[1][a[1].length - 1]?.ts || '';
+      const bt = b[1][b[1].length - 1]?.ts || '';
+      return bt.localeCompare(at);
+    });
+
+    el.innerHTML = sorted.map(([cwd, items]) => {
+      const parts = cwd.split('/').filter(Boolean);
+      const name = parts.pop() || cwd;
+      const parent = '/' + parts.join('/') + '/';
+      const blocked = items.filter(e => e.action === 'blocked').length;
+      const warned = items.filter(e => e.action === 'warned').length;
+
+      const counts = [
+        blocked ? `<span class="dir-count blocked">${blocked} blocked</span>` : '',
+        warned ? `<span class="dir-count warned">${warned} warned</span>` : '',
+        `<span class="dir-count">${items.length}</span>`
+      ].filter(Boolean).join('');
+
+      const rows = [...items].reverse().map(e => {
+        const t = localTime(e.ts);
+        const a = e.action || 'allowed';
+        const cmd = esc(e.command || '—');
+        const rule = e.rule && e.rule !== '-' ? e.rule : '';
+        return `<div class="row">
+          <div class="row-time">${t}</div>
+          <div class="row-action ${a}">${a}</div>
+          <div class="row-cmd"><span>${trunc(cmd, 70)}</span></div>
+          <div class="row-rule">${rule}</div>
+        </div>`;
+      }).join('');
+
+      return `<div class="dir-group">
+        <div class="dir-header" onclick="this.parentElement.classList.toggle('collapsed')">
+          <span class="dir-chevron">▾</span>
+          <div class="dir-path">${esc(parent)}<span class="name">${esc(name)}</span></div>
+          <div class="dir-counts">${counts}</div>
+        </div>
+        <div class="dir-entries">${rows}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderRules(rules) {
+    const el = document.getElementById('rules-list');
+    const badge = document.getElementById('rules-badge');
+    if (badge) {
+      const crit = rules.filter(r => r.severity === 'critical').length;
+      badge.textContent = rules.length + ' rules' + (crit ? ' / ' + crit + ' critical' : '');
+    }
+    if (!rules.length) { el.innerHTML = '<div class="feed-empty">no rules loaded.</div>'; return; }
+    el.innerHTML = rules.map(r => {
+      const s = r.severity || 'info';
+      const action = s === 'critical' ? 'blocks' : s === 'warning' ? 'warns' : 'logs';
+      return `<div class="rule">
+        <div class="rule-indicator ${s}"></div>
+        <div class="rule-body">
+          <div class="rule-name">${esc(r.name || '')}</div>
+          <div class="rule-desc">${esc(r.description || '')}</div>
+          <div class="rule-pattern"><code>${esc(r.pattern || '')}</code></div>
+        </div>
+        <div class="rule-sev">${action}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderHooks(hooks) {
+    const map = { claude: 'hook-claude', gemini: 'hook-gemini', kiro: 'hook-kiro' };
+    for (const [key, elId] of Object.entries(map)) {
+      const el = document.getElementById(elId);
+      if (!el) continue;
+      const status = hooks[key] || 'not found';
+      const isActive = status === 'active';
+      el.className = 'hook-status ' + (isActive ? 'active' : 'inactive');
+      el.innerHTML = `<div class="dot"></div><span>${status}</span>`;
+    }
+  }
+
+  function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function trunc(s, n) { return s.length > n ? s.slice(0, n) + '…' : s; }
+  function localTime(ts) {
+    if (!ts) return '—';
+    try {
+      const d = new Date(ts);
+      const date = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      return date + ' ' + time;
+    } catch { return ts.slice(0, 19) || '—'; }
+  }
+
+  // Theme toggle
+  function getTheme() {
+    const saved = localStorage.getItem('clippy-theme');
+    if (saved) return saved;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('clippy-theme', theme);
+    document.getElementById('theme-icon').innerHTML = theme === 'dark' ? '&#9790;' : '&#9728;';
+  }
+
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+  });
+
+  applyTheme(getTheme());
+
+  fetchAll();
+  start();
+})();
+</script>
+</body>
+</html>

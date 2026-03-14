@@ -1,8 +1,13 @@
 rules:
   - name: destructive-rm
     pattern: "rm\\s+(-[a-zA-Z]*f[a-zA-Z]*\\s+|.*--no-preserve-root)"
-    severity: critical
+    severity: warning
     description: "Recursive force delete or no-preserve-root"
+
+  - name: rm-command
+    pattern: "\\brm\\s+"
+    severity: warning
+    description: "File deletion with rm"
 
   - name: disk-format
     pattern: "(mkfs|dd\\s+if=|diskutil\\s+eraseDisk)"
@@ -37,12 +42,4 @@ rules:
 ai_tools:
   - name: claude
     process_name: "claude"
-    stop_signal: SIGTSTP
-
-  - name: kiro
-    process_name: "kiro"
-    stop_signal: SIGTSTP
-
-  - name: cursor
-    process_name: "cursor"
     stop_signal: SIGTSTP

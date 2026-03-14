@@ -1,6 +1,4 @@
+node_modules/
 .DS_Store
-build/
-DerivedData/
-*.xcuserdata
-.swiftpm/
-.build/
+.idea/
+.claude/
